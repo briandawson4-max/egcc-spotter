@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EGCC Spotter</title>
+<meta name="theme-color" content="#0b1426">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EGCC Spotter">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1426'/%3E%3Cpath fill='%23ffb020' d='M30 8c2-2 4-2 4 0v18l20 12v5l-20-6v12l6 4v4l-8-2-8 2v-4l6-4V37l-20 6v-5l20-12z'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0b1426;--bg2:#0f1b33;--card:#14223f;--card2:#1a2b4f;--line:#26385f;--text:#eaf1ff;--muted:#9fb0d0;--dim:#6f82a8;--amber:#ffb020;--green:#34d27b;--red:#ff6b6b;--cyan:#56d4ff;--violet:#b18cff;
+--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;background:radial-gradient(1200px 500px at 50% -200px,#1d3a6e 0%,transparent 70%),var(--bg)}
+header{position:sticky;top:0;z-index:20;padding:calc(10px + var(--safe-t)) 16px 10px;background:rgba(11,20,38,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+header .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ffb020,#ff7a18);display:grid;place-items:center;flex:none}
+header h1{font-size:18px;margin:0;letter-spacing:.3px}
+header .sub{font-size:12px;color:var(--muted)}
+header .clock{margin-left:auto;text-align:right;font-family:var(--mono);font-size:15px;color:var(--amber)}
+header .clock small{display:block;font-size:10px;color:var(--dim);font-family:inherit}
+main{padding:14px 14px calc(96px + var(--safe-b));max-width:720px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:0 0 10px;font-weight:600;display:flex;align-items:center;gap:8px}
+.hero{position:relative;overflow:hidden}
+.hero .verdict{font-size:30px;font-weight:800;letter-spacing:.3px;margin:2px 0 4px}
+.hero .why{color:var(--muted);font-size:15px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;background:var(--card2);border:1px solid var(--line)}
+.yes{color:var(--green)}.no{color:var(--red)}.maybe{color:var(--amber)}
+.rwy{font-family:var(--mono);font-weight:800;font-size:15px;padding:3px 8px;border-radius:6px;background:#0a0f1c;border:1px solid #33456d;color:#fff}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
+.tile .v{font-size:18px;font-weight:700;margin-top:2px}
+.tile .d{font-size:13px;color:var(--muted);margin-top:2px}
+.stars{font-size:26px;letter-spacing:2px;color:var(--amber)}
+.stars .off{color:#33456d}
+.small{font-size:13px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.raw{font-family:var(--mono);font-size:12.5px;color:#cfe0ff;background:#081022;border:1px solid var(--line);border-radius:10px;padding:10px;white-space:pre-wrap;word-break:break-word}
+details summary{cursor:pointer;color:var(--cyan);font-size:14px;margin:6px 0}
+.banner{border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:14px;border:1px solid}
+.banner.err{background:#3a1420;border-color:#7a2a3d;color:#ffd5dc}
+.banner.warn{background:#3a2d10;border-color:#7a5c1c;color:#ffe7b0}
+.timeline{display:flex;flex-wrap:wrap;gap:6px}
+.slot{flex:1 0 74px;border-radius:10px;padding:8px 6px;text-align:center;background:var(--card2);border:1px solid var(--line);font-size:12px}
+.slot b{display:block;font-family:var(--mono);font-size:14px}
+.slot.r05{border-color:#2f8f5b;background:#123524}.slot.r05p{border-color:#8a6a1f;background:#33290f}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.links a{display:block;text-decoration:none;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;font-weight:600;font-size:14px}
+.links a span{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+button,.btn{font:inherit;border:0;border-radius:12px;padding:11px 14px;font-weight:700;background:var(--card2);color:var(--text);border:1px solid var(--line);cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,#ffb020,#ff8a18);color:#1b1200;border:0}
+.btn-danger{background:#3a1420;color:#ffd5dc;border-color:#7a2a3d}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(11,20,38,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:6px 6px calc(6px + var(--safe-b))}
+nav.tabs button{flex:1;background:none;border:0;color:var(--dim);font-size:11px;font-weight:600;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.tabs button.on{color:var(--amber)}
+nav.tabs svg{width:24px;height:24px}
+.fab{position:fixed;right:18px;bottom:calc(84px + var(--safe-b));z-index:31;width:60px;height:60px;border-radius:50%;font-size:32px;line-height:1;padding:0;box-shadow:0 8px 24px rgba(255,140,24,.45)}
+input,select,textarea{font:inherit;font-size:16px;width:100%;background:#0a1222;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--amber)}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:12px 0 5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chip{padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+.chip.on{background:#3a2a08;border-color:var(--amber);color:var(--amber)}
+.sighting{display:flex;gap:12px;align-items:stretch;background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px;cursor:pointer}
+.sighting.special{border-color:#6c4fb8;box-shadow:inset 0 0 0 1px rgba(177,140,255,.25)}
+.thumb{width:86px;min-height:70px;border-radius:12px;background:#0a1222 center/cover no-repeat;flex:none;display:grid;place-items:center;color:#33456d}
+.sighting .reg{font-family:var(--mono);font-weight:800;font-size:17px;letter-spacing:.5px}
+.sighting .meta{font-size:13px;color:var(--muted)}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:4px;margin-top:4px}
+.b-special{background:#2b1f52;color:var(--violet)}.b-beluga{background:#0f3346;color:var(--cyan)}.b-rwy{background:#1c2a48;color:#cfe0ff;font-family:var(--mono)}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-height:92vh;overflow:auto;background:var(--bg2);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid var(--line);padding:8px 16px calc(20px + var(--safe-b));transform:translateY(105%);transition:transform .25s ease;max-width:720px;margin:0 auto}
+.sheet.open{transform:none}.sheet-bg.open{display:block}
+.grab{width:42px;height:5px;border-radius:3px;background:#33456d;margin:4px auto 10px}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px;border-radius:12px;background:#1d1636;border:1px solid #4b3a86}
+.toggle input{width:22px;height:22px;accent-color:#b18cff}
+.photo-prev{width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-top:8px;display:none}
+.stat-big{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat-big .tile{text-align:center}.stat-big .v{font-size:26px}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.bar .lbl{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track{flex:1;height:10px;background:#0a1222;border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:linear-gradient(90deg,#ffb020,#ff7a18);border-radius:6px}
+.bar .n{width:28px;text-align:right;font-family:var(--mono);color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(150px + var(--safe-b));transform:translateX(-50%);background:#0a0f1c;border:1px solid var(--amber);color:var(--text);padding:10px 16px;border-radius:12px;z-index:60;font-size:14px;display:none;max-width:90vw}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid #33456d;border-top-color:var(--amber);border-radius:50%;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+.photo-full{width:100%;border-radius:14px;margin-bottom:8px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:15px}.kv div:nth-child(odd){color:var(--muted)}
+a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 64 64"><path fill="#1b1200" d="M30 4c2-2 4-2 4 0v20l24 14v6l-24-7v13l7 5v5l-9-2-9 2v-5l7-5V37L6 44v-6l24-14z"/></svg></div>
+  <div><h1>EGCC Spotter</h1><div class="sub">Manchester · from Winsford</div></div>
+  <div class="clock"><span id="clock">--:--</span><small>UK time</small></div>
+</header>
+
+<main>
+<!-- LIVE -->
+<section id="tab-live" class="tab on">
+  <div id="wx-banner"></div>
+  <div class="card hero" id="hero">
+    <h2>Arrivals over Winsford?</h2>
+    <div class="verdict" id="verdict"><span class="spin"></span> <span class="small">Loading live Manchester weather…</span></div>
+    <div class="why" id="verdict-why"></div>
+    <div class="row" style="margin-top:12px" id="rwy-row"></div>
+  </div>
+
+  <div class="card" id="compass-card" style="display:none">
+    <h2>Runway &amp; wind picture</h2>
+    <div id="compass"></div>
+    <div class="small" id="compass-note"></div>
+  </div>
+
+  <div class="card" id="rating-card" style="display:none">
+    <h2>Spotting weather</h2>
+    <div class="row"><div class="stars" id="stars"></div><div><div style="font-weight:800;font-size:20px" id="rating-label"></div><div class="small" id="daylight"></div></div></div>
+    <div class="small" id="rating-why" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card" id="cond-card" style="display:none">
+    <h2>Conditions at Manchester now</h2>
+    <div class="grid" id="cond"></div>
+    <div class="small" id="obs-time" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card" id="taf-card" style="display:none">
+    <h2>Later today (forecast)</h2>
+    <div class="small" id="taf-summary" style="margin-bottom:10px"></div>
+    <div class="timeline" id="timeline"></div>
+    <div id="taf-tempo" class="small" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card" id="raw-card" style="display:none">
+    <h2>Raw reports</h2>
+    <div class="small">METAR</div><div class="raw" id="raw-metar"></div>
+    <div class="small" style="margin-top:8px">TAF</div><div class="raw" id="raw-taf"></div>
+    <div class="small" id="src" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Track on Flightradar24</h2>
+    <div class="links">
+      <a href="https://www.flightradar24.com/airport/man/arrivals" target="_blank" rel="noopener">🛬 MAN arrivals<span>Who's landing next</span></a>
+      <a href="https://www.flightradar24.com/airport/man/departures" target="_blank" rel="noopener">🛫 MAN departures<span>Who's leaving</span></a>
+      <a href="https://www.flightradar24.com/53.35,-2.28/11" target="_blank" rel="noopener">🗺️ Live map: airport<span>Manchester close-up</span></a>
+      <a href="https://www.flightradar24.com/53.19,-2.52/10" target="_blank" rel="noopener">🏠 Live map: Winsford<span>What's over you now</span></a>
+      <a href="https://www.flightradar24.com/airport/man/ground" target="_blank" rel="noopener">🅿️ On the ground<span>Parked at MAN</span></a>
+      <a href="https://www.flightradar24.com/data/aircraft/" target="_blank" rel="noopener">🔎 Look up a reg<span>Aircraft database</span></a>
+    </div>
+  </div>
+  <div style="text-align:center"><button id="refresh">↻ Refresh live data</button><div class="small" id="fetched" style="margin-top:8px"></div></div>
+</section>
+
+<!-- LOG -->
+<section id="tab-log" class="tab">
+  <div class="card" style="padding:12px">
+    <input id="q" type="search" placeholder="Search reg, type, airline, livery, notes…" autocomplete="off">
+    <div class="chips" id="filters">
+      <button class="chip on" data-f="all">All</button>
+      <button class="chip" data-f="special">✨ Special liveries</button>
+      <button class="chip" data-f="photo">📷 With photo</button>
+      <button class="chip" data-f="beluga">🐳 Beluga</button>
+      <button class="chip" data-f="year">This year</button>
+    </div>
+    <select id="sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="reg">Registration A–Z</option><option value="airline">Airline A–Z</option></select>
+  </div>
+  <div class="small" id="count" style="margin:0 4px 8px"></div>
+  <div id="list"></div>
+</section>
+
+<!-- STATS -->
+<section id="tab-stats" class="tab">
+  <div class="card"><h2>Your spotting log</h2><div class="stat-big" id="stat-big"></div></div>
+  <div class="card" id="stat-fun"></div>
+  <div class="card"><h2>Top airlines</h2><div id="bars-airline"></div></div>
+  <div class="card"><h2>Top types</h2><div id="bars-type"></div></div>
+  <div class="card"><h2>Sightings by month</h2><div id="bars-month"></div></div>
+  <div class="card">
+    <h2>Backup &amp; restore</h2>
+    <div class="small" style="margin-bottom:10px">Your log lives only on this phone. Export a backup now and then (JSON includes photos; CSV opens in Excel/Numbers).</div>
+    <div class="row">
+      <button id="exp-json" class="btn-primary">Export JSON</button>
+      <button id="exp-csv">Export CSV</button>
+      <button id="imp">Import file…</button>
+      <input type="file" id="imp-file" accept=".json,.csv,application/json,text/csv" style="display:none">
+    </div>
+    <div class="small" id="storage-note" style="margin-top:10px"></div>
+  </div>
+</section>
+</main>
+
+<button class="fab btn-primary" id="fab" title="Add sighting" style="display:none">+</button>
+
+<nav class="tabs">
+  <button data-tab="live" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Live</button>
+  <button data-tab="log"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>My log</button>
+  <button data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Stats</button>
+</nav>
+
+<div class="sheet-bg" id="sheet-bg"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <div id="sheet-body"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<datalist id="dl-type"><option>Airbus A319</option><option>Airbus A320</option><option>Airbus A320neo</option><option>Airbus A321</option><option>Airbus A321neo</option><option>Airbus A330</option><option>Airbus A350</option><option>Airbus A380</option><option>Airbus Beluga XL (A330-743L)</option><option>Airbus Beluga ST (A300-608ST)</option><option>Boeing 737-800</option><option>Boeing 737 MAX 8</option><option>Boeing 747</option><option>Boeing 757</option><option>Boeing 767</option><option>Boeing 777</option><option>Boeing 787 Dreamliner</option><option>Embraer E190</option><option>ATR 72</option><option>Antonov An-124</option></datalist>
+<datalist id="dl-airline"><option>Jet2</option><option>easyJet</option><option>Ryanair</option><option>TUI</option><option>British Airways</option><option>Virgin Atlantic</option><option>Emirates</option><option>Qatar Airways</option><option>Etihad</option><option>Singapore Airlines</option><option>Cathay Pacific</option><option>Turkish Airlines</option><option>Aer Lingus</option><option>KLM</option><option>Lufthansa</option><option>Loganair</option><option>Saudia</option><option>American Airlines</option><option>United</option><option>Delta</option><option>Airbus Transport (Beluga)</option></datalist>
+<datalist id="dl-loc"><option>Winsford (home)</option><option>Runway Visitor Park, MAN</option><option>Manchester Airport</option><option>Tracked on Flightradar24</option></datalist>
+
+<script>
+"use strict";
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TZ = 'Europe/London';
+const fmtTime = d => new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit'}).format(d);
+const fmtDayTime = d => new Intl.DateTimeFormat('en-GB',{timeZone:TZ,weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(d);
+const fmtDate = d => new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'numeric',month:'short',year:'numeric'}).format(d);
+function ukParts(d){const p={};new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d).forEach(x=>p[x.type]=x.value);return p;}
+const ukLocalInput = d => {const p=ukParts(d);return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;};
+function ago(d){const m=Math.round((Date.now()-d)/60000);if(m<1)return'just now';if(m<60)return m+' min ago';const h=Math.floor(m/60);return h+' h '+(m%60)+' min ago';}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.style.display='block';clearTimeout(toast._t);toast._t=setTimeout(()=>t.style.display='none',2600);}
+const COMPASS=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const compassWord = deg => COMPASS[Math.round(((deg%360)/22.5))%16];
+const LONGDIR={N:'north',NNE:'north-northeast',NE:'northeast',ENE:'east-northeast',E:'east',ESE:'east-southeast',SE:'southeast',SSE:'south-southeast',S:'south',SSW:'south-southwest',SW:'southwest',WSW:'west-southwest',W:'west',WNW:'west-northwest',NW:'northwest',NNW:'north-northwest'};
+const kt2mph = k => Math.round(k*1.15078);
+setInterval(()=>$('#clock').textContent=fmtTime(new Date()),1000);$('#clock').textContent=fmtTime(new Date());
+
+/* ============ METAR / TAF decoding ============ */
+const WX={MI:'shallow',BC:'patches of',PR:'partial',DR:'drifting',BL:'blowing',SH:'showers',TS:'thunderstorm',FZ:'freezing',DZ:'drizzle',RA:'rain',SN:'snow',SG:'snow grains',PL:'ice pellets',GR:'hail',GS:'small hail',UP:'precipitation',BR:'mist',FG:'fog',FU:'smoke',VA:'volcanic ash',DU:'dust',SA:'sand',HZ:'haze',PO:'dust whirls',SQ:'squalls',FC:'funnel cloud',SS:'sandstorm',DS:'duststorm'};
+const WXRE=/^(\+|-|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?((?:DZ|RA|SN|SG|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)+)?$/;
+function decodeWx(tok){
+  const m=tok.match(WXRE); if(!m||(!m[2]&&!m[3]))return null;
+  const [,int,desc,ph]=m; const phs=(ph||'').match(/../g)||[];
+  let words=phs.map(p=>WX[p]);
+  let s='';
+  if(desc==='SH'){s=(words.join(' and ')||'rain')+' showers';}
+  else if(desc==='TS'){s='thunderstorm'+(words.length?' with '+words.join(' and '):'');}
+  else s=[desc?WX[desc]:'',words.join(' and ')].filter(Boolean).join(' ');
+  if(int==='-')s='light '+s; else if(int==='+')s='heavy '+s; else if(int==='VC')s=s+' nearby'; else if(phs.some(p=>['RA','DZ','SN'].includes(p)))s='moderate '+s;
+  const sev = int==='+'||desc==='TS'||phs.includes('GR')?3 : (phs.some(p=>['RA','SN','PL','GS'].includes(p))&&int!=='-')?2 : phs.some(p=>['RA','DZ','SN','SG'].includes(p))?1:0;
+  const obsc = phs.some(p=>['FG','BR','HZ','FU'].includes(p));
+  return {text:s.trim(),sev,obsc,fog:phs.includes('FG'),raw:tok};
+}
+function parseWind(t){const m=t.match(/^(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)$/);if(!m)return null;let f=m[4]==='MPS'?1.944:1;return{vrb:m[1]==='VRB',dir:m[1]==='VRB'?null:+m[1],spd:Math.round(+m[2]*f),gust:m[3]?Math.round(+m[3]*f):null};}
+function parseCloud(t){const m=t.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3}|\/\/\/)(CB|TCU|\/\/\/)?$/);if(!m)return null;return{cover:m[1],base:m[2]==='///'?null:+m[2]*100,cb:m[3]==='CB'||m[3]==='TCU'?m[3]:null};}
+function parseVis(t){if(t==='CAVOK')return{m:10000,cavok:true};const m=t.match(/^(\d{4})(NDV)?$/);if(m)return{m:+m[1]};const s=t.match(/^(\d+)SM$/);if(s)return{m:+s[1]*1609};return null;}
+function dhmToDate(dd,hh,mm,ref){ // nearest month to ref
+  const r=ref||new Date(); let best=null;
+  for(const off of [-1,0,1]){const d=new Date(Date.UTC(r.getUTCFullYear(),r.getUTCMonth()+off,dd,hh,mm||0));if(d.getUTCDate()!==dd&&hh<24)continue;if(!best||Math.abs(d-r)<Math.abs(best-r))best=d;}
+  return best;
+}
+function parseMetar(raw){
+  const toks=raw.replace(/=$/,'').trim().split(/\s+/); const o={raw,wx:[],clouds:[],trend:''};
+  let i=0; if(toks[i]==='METAR'||toks[i]==='SPECI')i++; o.station=toks[i++];
+  const tm=(toks[i]||'').match(/^(\d{2})(\d{2})(\d{2})Z$/); if(tm){o.time=dhmToDate(+tm[1],+tm[2],+tm[3]);i++;}
+  for(;i<toks.length;i++){const t=toks[i];
+    if(['TEMPO','BECMG','NOSIG'].includes(t)){o.trend=toks.slice(i).join(' ');break;}
+    if(t==='AUTO'||t==='COR')continue;
+    let w; if(!o.wind&&(w=parseWind(t))){o.wind=w;continue;}
+    if(/^\d{3}V\d{3}$/.test(t)){o.varies=t.split('V').map(Number);continue;}
+    let v; if(o.vis==null&&(v=parseVis(t))){o.vis=v.m;if(v.cavok)o.cavok=true;continue;}
+    if(/^R\d{2}[LRC]?\//.test(t))continue;
+    let c; if((c=parseCloud(t))){o.clouds.push(c);continue;}
+    if(['NSC','NCD','SKC','CLR'].includes(t)){o.noCloud=true;continue;}
+    const tp=t.match(/^(M?\d{2})\/(M?\d{2})?$/); if(tp){const n=s=>s?(s[0]==='M'?-+s.slice(1):+s):null;o.temp=n(tp[1]);o.dew=n(tp[2]);continue;}
+    const q=t.match(/^Q(\d{4})$/); if(q){o.qnh=+q[1];continue;}
+    if(/^RE/.test(t)){o.recent=decodeWx(t.slice(2));continue;}
+    if(/^WS/.test(t))continue;
+    const x=decodeWx(t); if(x)o.wx.push(x);
+  }
+  return o;
+}
+function parseTaf(raw){
+  if(!raw)return null;
+  const toks=raw.replace(/=/g,'').trim().split(/\s+/); let i=0;
+  while(['TAF','AMD','COR'].includes(toks[i]))i++;
+  const o={raw,station:toks[i++],groups:[]};
+  const it=(toks[i]||'').match(/^(\d{2})(\d{2})(\d{2})Z$/); if(it){o.issued=dhmToDate(+it[1],+it[2],+it[3]);i++;}
+  const ref=o.issued||new Date();
+  const per=t=>{const m=t.match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);return m?[dhmToDate(+m[1],+m[2],0,ref),dhmToDate(+m[3],+m[4],0,ref)]:null;};
+  const vp=per(toks[i]||''); if(vp){o.from=vp[0];o.to=vp[1];i++;}
+  let g={kind:'BASE',from:o.from,to:o.to,wx:[],clouds:[]}; o.groups.push(g);
+  for(;i<toks.length;i++){const t=toks[i];
+    let m;
+    if(t==='BECMG'||t==='TEMPO'){ if(g.kind==='PROB'&&!g.sub&&t==='TEMPO'){g.sub='TEMPO';continue;} g={kind:t,wx:[],clouds:[]};o.groups.push(g);continue;}
+    if((m=t.match(/^PROB(\d{2})$/))){g={kind:'PROB',prob:+m[1],wx:[],clouds:[]};o.groups.push(g);continue;}
+    if((m=t.match(/^FM(\d{2})(\d{2})(\d{2})$/))){g={kind:'FM',from:dhmToDate(+m[1],+m[2],+m[3],ref),to:o.to,wx:[],clouds:[]};o.groups.push(g);continue;}
+    const p=per(t); if(p&&!g.from){g.from=p[0];g.to=p[1];continue;} if(p&&g.kind!=='BASE'){g.from=p[0];g.to=p[1];continue;}
+    let w; if((w=parseWind(t))){g.wind=w;continue;}
+    let v; if((v=parseVis(t))){g.vis=v.m;if(v.cavok)g.cavok=true;continue;}
+    let c; if((c=parseCloud(t))){g.clouds.push(c);continue;}
+    if(t==='NSW'){g.nsw=true;continue;}
+    if(['NSC','SKC'].includes(t)){g.noCloud=true;continue;}
+    const x=decodeWx(t); if(x)g.wx.push(x);
+  }
+  return o;
+}
+
+/* ============ runway & spotting logic ============ */
+const RWY23=231; // EGCC runways 05L/R–23L/R, ~051°/231° magnetic
+function runwayFor(w){
+  if(!w)return null;
+  if(w.spd<=2||(w.vrb&&w.spd<=5))return{rwy:'23',conf:'probably',tail:0,why:'Winds are light, and Manchester normally prefers runways 23L/R in light winds.'};
+  if(w.vrb)return{rwy:'?',conf:'unsure',tail:0,why:'Wind direction is variable, so either runway direction is possible.'};
+  const tail23=-w.spd*Math.cos((w.dir-RWY23)*Math.PI/180);
+  if(tail23>5)return{rwy:'05',conf:'likely',tail:tail23,why:`The wind is from the ${LONGDIR[compassWord(w.dir)]}, which would be a ${Math.round(tail23)} kt tailwind on 23, so they should be landing on 05L/R.`};
+  if(tail23>2)return{rwy:'23',conf:'possible05',tail:tail23,why:`A light ${LONGDIR[compassWord(w.dir)]}erly gives a small tailwind on 23. They'll probably stay on 23L/R, but a switch to 05 is possible.`};
+  return{rwy:'23',conf:'likely',tail:tail23,why:`The wind is from the ${LONGDIR[compassWord(w.dir)]}, a headwind for runways 23L/R, so arrivals land towards the southwest.`};
+}
+function lowestCeiling(clouds){const c=clouds.filter(c=>['BKN','OVC','VV'].includes(c.cover)&&c.base!=null);return c.length?Math.min(...c.map(c=>c.base)):null;}
+function spottingRating(m){
+  let s=5; const why=[];
+  const vis=m.vis??(m.cavok?10000:null);
+  if(vis!=null){ if(vis<1500){s-=3;why.push('very poor visibility');} else if(vis<5000){s-=2;why.push('poor visibility');} else if(vis<8000){s-=1;why.push('hazy visibility');} else why.push('good visibility'); }
+  const ceil=lowestCeiling(m.clouds);
+  if(ceil!=null){ if(ceil<500){s-=2;why.push(`cloud very low at ${ceil} ft`);} else if(ceil<1000){s-=1.5;why.push(`low cloud at ${ceil} ft`);} else if(ceil<2000){s-=.5;why.push(`cloud base around ${ceil} ft`);} else why.push(`cloud base high at ${ceil} ft`);}
+  else if(m.cavok||m.noCloud) why.push('no significant cloud');
+  const sev=Math.max(0,...m.wx.map(x=>x.sev)); if(sev===3){s-=2;why.push('heavy rain or storms');} else if(sev===2){s-=1;why.push('rain');} else if(sev===1){s-=.5;why.push('light rain or drizzle');}
+  if(m.wx.some(x=>x.fog)){s-=1;why.push('fog');}
+  if(m.wind){ if((m.wind.gust||0)>=35){s-=1;why.push(`strong gusts (${m.wind.gust} kt)`);} else if(m.wind.spd>=25){s-=.5;why.push('very windy');} else if((m.wind.gust||0)>=25) why.push('gusty, so expect wobbly landings'); }
+  s=Math.max(1,Math.min(5,Math.round(s)));
+  return{stars:s,label:['','Grim','Poor','OK','Good','Superb'][s],why};
+}
+// Sunrise/sunset (NOAA approximation) for Manchester
+function sunTimes(date,lat=53.35,lon=-2.27){
+  const rad=Math.PI/180, J=date/86400000+2440587.5, n=Math.round(J-2451545.0009-(-lon)/360);
+  const Js=2451545.0009+(-lon)/360+n, M=(357.5291+0.98560028*(Js-2451545))%360;
+  const C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad);
+  const L=(M+102.9372+C+180)%360, Jt=Js+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad);
+  const d=Math.asin(Math.sin(L*rad)*Math.sin(23.44*rad));
+  const w=Math.acos((Math.sin(-0.83*rad)-Math.sin(lat*rad)*Math.sin(d))/(Math.cos(lat*rad)*Math.cos(d)))/rad;
+  const toD=j=>new Date((j-2440587.5)*86400000);
+  return{rise:toD(Jt-w/360),set:toD(Jt+w/360)};
+}
+
+/* ============ data loading ============ */
+async function getText(url,ms=9000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{signal:c.signal,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return (await r.text()).trim();}finally{clearTimeout(t);}}
+async function loadWx(){
+  const errors=[];
+  if(location.protocol.startsWith('http')){
+    try{const j=JSON.parse(await getText('api/wx'));if(j.metar)return{metar:j.metar,taf:j.taf,sources:j.sources,fetchedAt:new Date()};errors.push(...(j.errors||[]));}catch(e){errors.push('app server: '+e.message);}
+  }
+  // Fallback: public sources that allow direct browser access
+  const out={metar:null,taf:null,sources:[],fetchedAt:new Date()};
+  try{const t=await getText('https://metar.vatsim.net/EGCC');if(/^EGCC \d{6}Z/.test(t)){out.metar=t.split('\n')[0];out.sources.push('metar.vatsim.net METAR');}}catch(e){errors.push('vatsim: '+e.message);}
+  try{const t=await getText('https://api.met.no/weatherapi/tafmetar/1.0/taf?icao=EGCC');const list=t.split(/=\s*/).map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean);
+      const last=list[list.length-1]; const p=last&&parseTaf(last); if(p&&p.to&&p.to>new Date()&&p.issued&&Date.now()-p.issued<7*3600000){out.taf=last;out.sources.push('MET Norway TAF');}}catch(e){errors.push('met.no: '+e.message);}
+  if(!out.taf){try{const j=JSON.parse(await getText('https://api.open-meteo.com/v1/forecast?latitude=53.354&longitude=-2.275&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn&timezone=GMT&forecast_hours=27'));
+      if(j.hourly&&j.hourly.time){out.model={time:j.hourly.time.map(t=>t+':00Z'),spd:j.hourly.wind_speed_10m,dir:j.hourly.wind_direction_10m,gust:j.hourly.wind_gusts_10m};out.sources.push('Open-Meteo wind forecast');}}catch(e){errors.push('open-meteo: '+e.message);}}
+  if(!out.metar)throw new Error('Could not reach any live weather source. '+errors.join('; '));
+  return out;
+}
+
+/* ============ render live ============ */
+let lastData=null;
+function setBanner(html,cls){$('#wx-banner').innerHTML=html?`<div class="banner ${cls}">${html}</div>`:'';}
+function compassSVG(m,rw){
+  const cx=160,cy=150,R=110, pt=(b,r)=>[cx+r*Math.sin(b*Math.PI/180),cy-r*Math.cos(b*Math.PI/180)];
+  const [ax,ay]=pt(RWY23,70),[bx,by]=pt(51,70);
+  let s=`<svg viewBox="0 0 320 300" width="100%" style="max-width:420px;display:block;margin:0 auto">`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="#0a1222" stroke="#26385f"/>`;
+  for(let b=0;b<360;b+=30){const[x1,y1]=pt(b,R-6),[x2,y2]=pt(b,R);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#33456d"/>`;}
+  [['N',0],['E',90],['S',180],['W',270]].forEach(([l,b])=>{const[x,y]=pt(b,R+14);s+=`<text x="${x}" y="${y+4}" fill="#6f82a8" font-size="12" text-anchor="middle" font-weight="700">${l}</text>`;});
+  // approach path on active side
+  if(rw&&rw.rwy!=='?'){const appB=rw.rwy==='05'?RWY23:51;const[px,py]=pt(appB,R-2),[qx,qy]=pt(appB,100);
+    s+=`<line x1="${px}" y1="${py}" x2="${qx}" y2="${qy}" stroke="${rw.rwy==='05'?'#34d27b':'#ff6b6b'}" stroke-width="3" stroke-dasharray="6 6" opacity=".9"/>`;
+    const[lx,ly]=pt(appB+16,R-20);s+=`<text x="${lx}" y="${ly}" fill="${rw.rwy==='05'?'#34d27b':'#ff6b6b'}" font-size="11" font-weight="700" text-anchor="middle">arrivals</text>`;}
+  // runways (two parallel)
+  [-6,6].forEach(o=>{const dx=o*Math.cos(RWY23*Math.PI/180),dy=o*Math.sin(RWY23*Math.PI/180);s+=`<line x1="${ax+dx}" y1="${ay+dy}" x2="${bx+dx}" y2="${by+dy}" stroke="#cfd8ea" stroke-width="6" stroke-linecap="round"/>`;});
+  const[t1x,t1y]=pt(RWY23,90),[t2x,t2y]=pt(51,90);
+  s+=`<text x="${t1x}" y="${t1y+4}" fill="#fff" font-size="12" font-family="monospace" text-anchor="middle" font-weight="800">23</text><text x="${t2x}" y="${t2y+4}" fill="#fff" font-size="12" font-family="monospace" text-anchor="middle" font-weight="800">05</text>`;
+  // Winsford (bearing ~225°, ~15 nm)
+  const[wx,wy]=pt(224,R-4); s+=`<circle cx="${wx}" cy="${wy}" r="7" fill="#ffb020" stroke="#1b1200" stroke-width="2"/><text x="${wx-10}" y="${wy+22}" fill="#ffb020" font-size="12" font-weight="700" text-anchor="middle">Winsford</text>`;
+  // wind arrow from where wind comes from, pointing inward
+  if(m.wind&&m.wind.dir!=null&&m.wind.spd>0){const[sx,sy]=pt(m.wind.dir,R+2),[ex,ey]=pt(m.wind.dir,36);
+    s+=`<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#56d4ff"/></marker></defs><line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="#56d4ff" stroke-width="4" marker-end="url(#ah)"/>`;
+    const[kx,ky]=pt(m.wind.dir,R-28);s+=`<text x="${kx}" y="${ky}" fill="#56d4ff" font-size="11" font-weight="700" text-anchor="middle" dx="${m.wind.dir<180?-22:22}">wind</text>`;}
+  s+=`<circle cx="${cx}" cy="${cy}" r="3" fill="#ffb020"/></svg>`;
+  return s;
+}
+function windText(w,varies){
+  if(!w)return{v:'—',d:'Not reported'};
+  if(w.spd===0)return{v:'Calm',d:'No wind to speak of'};
+  const dir=w.vrb?'Variable':`${compassWord(w.dir)} ${String(w.dir).padStart(3,'0')}°`;
+  return{v:`${dir} · ${w.spd} kt`,d:`About ${kt2mph(w.spd)} mph${w.gust?`, gusting ${w.gust} kt (${kt2mph(w.gust)} mph)`:''}${varies?`, swinging ${varies[0]}°–${varies[1]}°`:''}`};
+}
+function visText(m){if(m.cavok)return{v:'10 km +',d:'CAVOK: clear, nothing below 5,000 ft'};if(m.vis==null)return{v:'—',d:'Not reported'};if(m.vis>=9999)return{v:'10 km +',d:'Excellent'};return{v:(m.vis>=5000?Math.round(m.vis/1000):(m.vis/1000).toFixed(1))+' km',d:m.vis<1500?'Very poor':m.vis<5000?'Poor':m.vis<8000?'Moderate':'Good'};}
+const COVER={FEW:'A few clouds',SCT:'Scattered cloud',BKN:'Broken cloud',OVC:'Overcast',VV:'Sky obscured'};
+function cloudText(m){if(m.cavok)return{v:'Clear',d:'No cloud below 5,000 ft'};if(!m.clouds.length)return{v:m.noCloud?'No significant cloud':'—',d:''};
+  const c=m.clouds[0];return{v:`${COVER[c.cover]} at ${c.base!=null?c.base.toLocaleString('en-GB')+' ft':'?'}`,d:m.clouds.slice(1).map(c=>`${COVER[c.cover].toLowerCase()} at ${c.base?.toLocaleString('en-GB')} ft`).join(', ')+(m.clouds.some(c=>c.cb)?' · shower clouds (CB/TCU) about':'')};}
+function renderLive(d,stale){
+  const m=parseMetar(d.metar), taf=d.taf?parseTaf(d.taf):null, rw=runwayFor(m.wind);
+  const age=m.time?Date.now()-m.time:0;
+  if(stale) setBanner(`⚠️ Couldn't load fresh live data just now. Showing the last report I successfully loaded, from ${fmtDayTime(m.time||d.fetchedAt)} UK time (${ago(m.time||d.fetchedAt)}). Tap Refresh to try again.`,'warn');
+  else if(age>90*60000) setBanner(`⚠️ The latest Manchester report is ${ago(m.time)} old, so it may be out of date.`,'warn');
+  else setBanner('');
+  // hero
+  let v,cls,why;
+  if(!rw){v='Unknown';cls='maybe';why='Wind not reported, so I can\'t estimate the runway.';}
+  else if(rw.rwy==='05'){v='Yes, likely ✈️';cls='yes';why='Manchester is probably landing on 05L/R. Arrivals line up from the southwest and come over mid-Cheshire, usually a few thousand feet up near Winsford.';}
+  else if(rw.conf==='possible05'){v='Maybe';cls='maybe';why='Probably still on 23L/R, but the wind is close to the switch point. If they swap to 05, arrivals will come your way.';}
+  else if(rw.rwy==='?'){v='Maybe';cls='maybe';why='The wind is variable, so either direction is possible.';}
+  else{v='No, not right now';cls='no';why='Manchester is probably landing on 23L/R, so arrivals come in from the northeast over Stockport. Departures climb out towards the southwest, so you may spot some of those instead.';}
+  $('#verdict').innerHTML=`<span class="${cls}">${v}</span>`;$('#verdict-why').textContent=why;
+  $('#rwy-row').innerHTML=rw?`<span class="pill">Likely runway <span class="rwy">${rw.rwy==='?'?'05 / 23':rw.rwy+'L/R'}</span></span><span class="small">Estimate from the wind, not an official runway feed.</span>`:'';
+  // compass
+  $('#compass-card').style.display='';$('#compass').innerHTML=compassSVG(m,rw);$('#compass-note').textContent=rw?rw.why:'';
+  // rating
+  const r=spottingRating(m);$('#rating-card').style.display='';
+  $('#stars').innerHTML='★'.repeat(r.stars)+`<span class="off">${'★'.repeat(5-r.stars)}</span>`;$('#rating-label').textContent=r.label;
+  const now=new Date(),st=sunTimes(now),dark=now<st.rise||now>st.set;
+  $('#daylight').textContent=dark?`Dark now. Sunrise ${fmtTime(st.rise)} UK time. Good for Flightradar24, tricky for photos.`:`Daylight until about ${fmtTime(st.set)} UK time`;
+  $('#rating-why').textContent=r.why.length?r.why[0][0].toUpperCase()+r.why.join(', ').slice(1)+'.':'';
+  // conditions
+  const W=windText(m.wind,m.varies),V=visText(m),C=cloudText(m);
+  const wxs=m.wx.length?m.wx.map(x=>x.text).join(', '):'Dry';
+  const tile=(k,v,d)=>`<div class="tile"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="d">${esc(d||'')}</div></div>`;
+  $('#cond-card').style.display='';
+  $('#cond').innerHTML=tile('Wind',W.v,W.d)+tile('Visibility',V.v,V.d)+tile('Cloud',C.v,C.d)+tile('Weather',wxs[0].toUpperCase()+wxs.slice(1),m.recent?'Recently: '+m.recent.text:'')+tile('Temperature',m.temp!=null?m.temp+'°C':'—',m.dew!=null?'Dew point '+m.dew+'°C':'')+tile('Pressure',m.qnh?m.qnh+' hPa':'—',m.trend?'Trend: '+m.trend.replace('NOSIG','no big change expected'):'');
+  $('#obs-time').textContent=m.time?`Observed ${fmtDayTime(m.time)} UK time (${ago(m.time)}). Manchester issues a new report every 30 minutes.`:'';
+  // taf
+  renderTaf(taf,d.model);
+  $('#raw-card').style.display='';$('#raw-metar').textContent=d.metar;$('#raw-taf').textContent=d.taf||'Not available right now.';
+  $('#src').textContent='Sources: '+(d.sources||[]).join(', ');
+  $('#fetched').textContent=`Last checked ${fmtTime(d.fetchedAt)} UK time · refreshes every 10 min`;
+}
+function tafStateAt(taf,t){
+  const st={wind:null,vis:null,wx:[],clouds:[]}; const tempo=[];
+  for(const g of taf.groups){
+    if(g.kind==='BASE'||(g.kind==='FM'&&g.from<=t)){if(g.wind)st.wind=g.wind;if(g.vis!=null)st.vis=g.vis;st.wx=g.wx;st.clouds=g.clouds;}
+    else if(g.kind==='BECMG'&&g.from&&g.from<=t){if(g.wind)st.wind=g.wind;if(g.vis!=null)st.vis=g.vis;if(g.wx.length||g.nsw)st.wx=g.wx;if(g.clouds.length)st.clouds=g.clouds;}
+    else if((g.kind==='TEMPO'||g.kind==='PROB')&&g.from&&g.from<=t&&g.to>t)tempo.push(g);
+  }
+  return{st,tempo};
+}
+function describeGroup(g){
+  const bits=[]; if(g.wind){bits.push(g.wind.vrb?`variable winds ${g.wind.spd} kt`:`wind ${LONGDIR[compassWord(g.wind.dir)]} ${g.wind.spd} kt`+(g.wind.gust?` gusting ${g.wind.gust} kt`:''));}
+  if(g.vis!=null&&g.vis<9999)bits.push(`visibility ${g.vis>=5000?Math.round(g.vis/1000):(g.vis/1000).toFixed(1)} km`);
+  if(g.wx.length)bits.push(g.wx.map(x=>x.text).join(', ')); if(g.nsw)bits.push('rain clearing');
+  const ce=lowestCeiling(g.clouds); if(ce!=null)bits.push(`cloud down to ${ce} ft`);
+  return bits.join(', ');
+}
+function renderModel(md){
+  const now=Date.now();const slots=[];
+  md.time.forEach((t,i)=>{const d=new Date(t);if(d<now-3600000||slots.length>=8)return;if(slots.length&&d-slots[slots.length-1].t<3*3600000)return;
+    const w={vrb:false,dir:Math.round(md.dir[i]),spd:Math.round(md.spd[i]),gust:md.gust[i]&&md.gust[i]-md.spd[i]>=10?Math.round(md.gust[i]):null};slots.push({t:d,rw:runwayFor(w),st:{wind:w},tempo05:false});});
+  return slots;
+}
+function renderTaf(taf,md){
+  const card=$('#taf-card');
+  if((!taf||!taf.to||taf.to<new Date())&&md){card.style.display='';const slots=renderModel(md);drawSlots(slots,'weather-model forecast (Open-Meteo), because the official Manchester TAF could not be loaded');$('#taf-tempo').textContent='';return;}
+  if(!taf||!taf.to||taf.to<new Date()){card.style.display='';$('#taf-summary').textContent='The Manchester forecast (TAF) could not be loaded right now, so there is no runway outlook. The live picture above is still current.';$('#timeline').innerHTML='';$('#taf-tempo').textContent='';return;}
+  card.style.display='';
+  const start=new Date();start.setUTCMinutes(0,0,0);
+  const slots=[];
+  for(let h=0;h<24;h+=3){const t=new Date(+start+h*3600000);if(t>=taf.to)break;
+    const {st,tempo}=tafStateAt(taf,new Date(+t+1));const rw=runwayFor(st.wind);
+    const tempo05=tempo.some(g=>g.wind&&runwayFor(g.wind)?.rwy==='05');
+    slots.push({t,rw,st,tempo05});}
+  drawSlots(slots,'official forecast (TAF)');
+  const nowT=new Date();
+  const tempos=taf.groups.filter(g=>(g.kind==='TEMPO'||g.kind==='PROB')&&g.to>nowT).slice(0,4);
+  $('#taf-tempo').innerHTML=tempos.length?'<b style="color:var(--text)">At times:</b><br>'+tempos.map(g=>`• ${fmtTime(g.from<nowT?nowT:g.from)}–${fmtTime(g.to)}${g.prob?` (${g.prob}% chance)`:''}: ${esc(describeGroup(g))}`).join('<br>'):'';
+  $('#taf-tempo').insertAdjacentHTML('beforeend',`<div style="margin-top:6px">Forecast issued ${taf.issued?fmtDayTime(taf.issued)+' UK time':''}, valid until ${fmtDayTime(taf.to)} UK time.</div>`);
+}
+function drawSlots(slots,srcText){
+  $('#timeline').innerHTML=slots.map(s=>{const r=s.rw?s.rw.rwy:'?';const c=r==='05'?'r05':(s.rw&&s.rw.conf==='possible05')||s.tempo05?'r05p':'';
+    const w=s.st.wind;const ws=w?(w.vrb?'VRB':compassWord(w.dir))+' '+w.spd+(w.gust?'G'+w.gust:''):'—';
+    return `<div class="slot ${c}"><div>${fmtTime(s.t)}</div><b>${r==='?'?'05/23':r}</b><div class="small">${ws} kt</div></div>`;}).join('');
+  const any05=slots.filter(s=>s.rw&&s.rw.rwy==='05'), maybe05=slots.filter(s=>(s.rw&&s.rw.conf==='possible05')||s.tempo05);
+  let sum;
+  if(any05.length)sum=`Good news: the forecast wind favours runway 05 around ${fmtTime(any05[0].t)} UK time, which would bring arrivals over Winsford.`;
+  else if(maybe05.length)sum=`Mostly 23 expected, but an easterly spell or wind shift could bring 05 (and arrivals your way) around ${fmtTime(maybe05[0].t)} UK time.`;
+  else sum='The forecast wind keeps Manchester on runway 23 for the rest of the forecast, so arrivals stay away from Winsford.';
+  $('#taf-summary').textContent=sum+` Green = 05 likely, amber = 05 possible. Estimates from the ${srcText}.`;
+}
+let loading=false;
+async function refresh(){
+  if(loading)return;loading=true;$('#refresh').disabled=true;$('#refresh').innerHTML='<span class="spin"></span> Loading…';
+  try{const d=await loadWx();lastData=d;localStorage.setItem('lastWx',JSON.stringify(d));renderLive(d,false);}
+  catch(e){
+    const prev=localStorage.getItem('lastWx');
+    if(prev){const d=JSON.parse(prev);d.fetchedAt=new Date(d.fetchedAt);renderLive(d,true);}
+    else{setBanner(`❌ Live Manchester weather couldn't be loaded. Check your connection and tap Refresh. (${esc(e.message)})`,'err');
+      $('#verdict').innerHTML='<span class="maybe">No live data</span>';$('#verdict-why').textContent='I won\'t guess. This needs the real Manchester weather report to work out the runway.';$('#rwy-row').innerHTML='';}
+  }finally{loading=false;$('#refresh').disabled=false;$('#refresh').textContent='↻ Refresh live data';}
+}
+$('#refresh').onclick=refresh;
+setInterval(()=>{if(document.visibilityState==='visible')refresh();},10*60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&lastData&&Date.now()-lastData.fetchedAt>5*60000)refresh();});
+
+/* ============ storage (IndexedDB) ============ */
+const DB={db:null,
+  open(){return new Promise((res,rej)=>{const r=indexedDB.open('egcc-spotter',1);r.onupgradeneeded=()=>r.result.createObjectStore('sightings',{keyPath:'id'});r.onsuccess=()=>{this.db=r.result;res();};r.onerror=()=>rej(r.error);});},
+  tx(mode){return this.db.transaction('sightings',mode).objectStore('sightings');},
+  all(){return new Promise((res,rej)=>{const r=this.tx('readonly').getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});},
+  put(o){return new Promise((res,rej)=>{const r=this.tx('readwrite').put(o);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});},
+  del(id){return new Promise((res,rej)=>{const r=this.tx('readwrite').delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error);});}
+};
+let items=[]; const urls=new Map();
+const photoURL=s=>{if(!s.photo)return null;if(!urls.has(s.id))urls.set(s.id,URL.createObjectURL(s.photo));return urls.get(s.id);};
+const isBeluga=s=>/beluga|a300-?600st|a330-?743/i.test([s.type,s.airline,s.livery,s.notes].join(' '));
+async function reload(){items=await DB.all();renderList();renderStats();}
+
+/* ============ log UI ============ */
+let filter='all';
+document.querySelectorAll('#filters .chip').forEach(b=>b.onclick=()=>{document.querySelectorAll('#filters .chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');filter=b.dataset.f;renderList();});
+$('#q').oninput=renderList;$('#sort').onchange=renderList;
+function renderList(){
+  const q=$('#q').value.trim().toLowerCase(); const yr=ukParts(new Date()).year;
+  let l=items.filter(s=>{
+    if(filter==='special'&&!s.special)return false; if(filter==='photo'&&!s.photo)return false; if(filter==='beluga'&&!isBeluga(s))return false; if(filter==='year'&&!(s.when||'').startsWith(yr))return false;
+    return !q||[s.reg,s.type,s.airline,s.livery,s.notes,s.location].join(' ').toLowerCase().includes(q);});
+  const so=$('#sort').value;
+  l.sort((a,b)=>so==='old'?(a.when||'').localeCompare(b.when||''):so==='reg'?(a.reg||'').localeCompare(b.reg||''):so==='airline'?(a.airline||'').localeCompare(b.airline||''):(b.when||'').localeCompare(a.when||''));
+  $('#count').textContent=items.length?`${l.length} of ${items.length} sighting${items.length===1?'':'s'}`:'';
+  if(!items.length){$('#list').innerHTML=`<div class="empty"><div style="font-size:44px">🛫</div><b>No sightings yet</b><br>Tap the orange + to log your first plane.<br>Tick “Special livery” for the colourful ones.</div>`;return;}
+  if(!l.length){$('#list').innerHTML='<div class="empty">No sightings match that search or filter.</div>';return;}
+  $('#list').innerHTML=l.map(s=>{const p=photoURL(s);const dt=s.when?fmtDayTime(new Date(s.when+':00Z')).replace(/,? \d\d:\d\d$/,'')+' '+s.when.slice(11,16):'';
+    return `<div class="sighting ${s.special?'special':''}" data-id="${s.id}"><div class="thumb" style="${p?`background-image:url('${p}')`:''}">${p?'':'✈'}</div>
+    <div style="min-width:0;flex:1"><div class="reg">${esc(s.reg||'No reg')}</div><div class="meta">${esc([s.type,s.airline].filter(Boolean).join(' · '))}</div>
+    ${s.livery?`<div class="meta" style="color:#d7c8ff">${esc(s.livery)}</div>`:''}<div class="meta">${esc(dt)}${s.location?' · '+esc(s.location):''}</div>
+    <div>${s.special?'<span class="badge b-special">✨ SPECIAL LIVERY</span>':''}${isBeluga(s)?'<span class="badge b-beluga">🐳 BELUGA</span>':''}${s.runway?`<span class="badge b-rwy">RWY ${esc(s.runway)}</span>`:''}</div></div></div>`;}).join('');
+  document.querySelectorAll('.sighting').forEach(el=>el.onclick=()=>showSighting(el.dataset.id));
+}
+function openSheet(html){$('#sheet-body').innerHTML=html;$('#sheet').classList.add('open');$('#sheet-bg').classList.add('open');$('#sheet').scrollTop=0;}
+function closeSheet(){$('#sheet').classList.remove('open');$('#sheet-bg').classList.remove('open');}
+$('#sheet-bg').onclick=closeSheet;
+function showSighting(id){const s=items.find(x=>x.id===id);if(!s)return;const p=photoURL(s);
+  openSheet(`${p?`<img class="photo-full" src="${p}" alt="">`:''}<div class="reg mono" style="font-size:26px;font-weight:800">${esc(s.reg||'No reg')}</div>
+  <div style="margin:6px 0 12px">${s.special?'<span class="badge b-special">✨ SPECIAL LIVERY</span>':''}${isBeluga(s)?'<span class="badge b-beluga">🐳 BELUGA</span>':''}</div>
+  <div class="kv"><div>Type</div><div>${esc(s.type||'—')}</div><div>Airline</div><div>${esc(s.airline||'—')}</div><div>Livery</div><div>${esc(s.livery||'—')}</div><div>When</div><div>${esc(s.when?s.when.replace('T',' '):'—')} UK</div><div>Where</div><div>${esc(s.location||'—')}</div><div>Runway</div><div>${esc(s.runway||'—')}</div><div>Notes</div><div>${esc(s.notes||'—')}</div></div>
+  <div class="row" style="margin-top:16px">${s.reg?`<a class="btn" style="text-decoration:none" href="https://www.flightradar24.com/data/aircraft/${encodeURIComponent(s.reg.toLowerCase())}" target="_blank" rel="noopener">Look up on FR24</a>`:''}<button id="ed">Edit</button><button class="btn-danger" id="dl">Delete</button><button id="cl">Close</button></div>`);
+  $('#ed').onclick=()=>editSighting(s);$('#cl').onclick=closeSheet;
+  $('#dl').onclick=async()=>{if(!confirm('Delete this sighting?'))return;await DB.del(s.id);urls.delete(s.id);closeSheet();await reload();toast('Sighting deleted');};
+}
+function editSighting(s){
+  const e=s||{};const isNew=!s;let photo=e.photo||null;
+  openSheet(`<h2 style="margin:0 0 4px;font-size:20px">${isNew?'Log a sighting':'Edit sighting'}</h2>
+  <label>Registration</label><input id="f-reg" placeholder="e.g. G-JZHA" autocapitalize="characters" autocomplete="off" value="${esc(e.reg)}">
+  <label>Aircraft type</label><input id="f-type" list="dl-type" placeholder="e.g. Boeing 737-800" value="${esc(e.type)}">
+  <label>Airline / operator</label><input id="f-airline" list="dl-airline" placeholder="e.g. Jet2" value="${esc(e.airline)}">
+  <div class="toggle"><input type="checkbox" id="f-special" ${e.special?'checked':''}><div><b style="color:#d7c8ff">✨ Special livery</b><div class="small">Retro, charity, sports, anniversary…</div></div></div>
+  <label>Livery / description</label><input id="f-livery" placeholder="e.g. Retro BOAC colours" value="${esc(e.livery)}">
+  <label>Date &amp; time (UK)</label><input id="f-when" type="datetime-local" value="${esc(e.when||ukLocalInput(new Date()))}">
+  <label>Where</label><input id="f-loc" list="dl-loc" placeholder="e.g. Winsford (home)" value="${esc(e.location??'Winsford (home)')}">
+  <label>Runway (optional)</label><select id="f-rwy"><option value="">Not sure</option>${['05L','05R','23L','23R'].map(r=>`<option ${e.runway===r?'selected':''}>${r}</option>`).join('')}</select>
+  <label>Notes</label><textarea id="f-notes" rows="2" placeholder="Anything to remember">${esc(e.notes)}</textarea>
+  <label>Photo (optional)</label><input id="f-photo" type="file" accept="image/*"><img id="f-prev" class="photo-prev" alt="">
+  ${photo?'<button id="f-rmphoto" style="margin-top:8px">Remove photo</button>':''}
+  <div class="row" style="margin-top:18px"><button class="btn-primary" id="f-save" style="flex:1">Save sighting</button><button id="f-cancel">Cancel</button></div>`);
+  if(photo){$('#f-prev').src=URL.createObjectURL(photo);$('#f-prev').style.display='block';}
+  $('#f-photo').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{photo=await shrink(f);$('#f-prev').src=URL.createObjectURL(photo);$('#f-prev').style.display='block';}catch(err){toast('Could not read that photo');}};
+  if($('#f-rmphoto'))$('#f-rmphoto').onclick=()=>{photo=null;$('#f-prev').style.display='none';toast('Photo will be removed when you save');};
+  $('#f-reg').oninput=ev=>{const p=ev.target.selectionStart;ev.target.value=ev.target.value.toUpperCase();ev.target.setSelectionRange(p,p);};
+  $('#f-cancel').onclick=closeSheet;
+  $('#f-save').onclick=async()=>{
+    const o={id:e.id||('s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),reg:$('#f-reg').value.trim().toUpperCase(),type:$('#f-type').value.trim(),airline:$('#f-airline').value.trim(),
+      special:$('#f-special').checked,livery:$('#f-livery').value.trim(),when:$('#f-when').value,location:$('#f-loc').value.trim(),runway:$('#f-rwy').value,notes:$('#f-notes').value.trim(),photo,createdAt:e.createdAt||new Date().toISOString()};
+    if(!o.reg&&!o.type&&!o.airline){toast('Add at least a registration, type or airline');return;}
+    try{await DB.put(o);}catch(err){toast('Could not save: '+err.message);return;}
+    urls.delete(o.id);closeSheet();await reload();toast(o.special?'✨ Special livery logged!':'Sighting saved ✈️');
+  };
+}
+async function shrink(file,max=1600){
+  const url=URL.createObjectURL(file);
+  try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);return await new Promise(res=>c.toBlob(b=>res(b||file),'image/jpeg',.82));}
+  finally{URL.revokeObjectURL(url);}
+}
+$('#fab').onclick=()=>editSighting(null);
+
+/* ============ stats ============ */
+function topN(arr,n=5){const m=new Map();arr.filter(Boolean).forEach(k=>m.set(k,(m.get(k)||0)+1));return[...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,n);}
+function bars(list,empty){if(!list.length)return`<div class="small">${empty}</div>`;const mx=Math.max(...list.map(x=>x[1]));return list.map(([k,n])=>`<div class="bar"><div class="lbl">${esc(k)}</div><div class="track"><div class="fill" style="width:${n/mx*100}%"></div></div><div class="n">${n}</div></div>`).join('');}
+function renderStats(){
+  const regs=new Set(items.map(s=>s.reg).filter(Boolean));const sp=items.filter(s=>s.special).length;
+  const p=ukParts(new Date());const thisMonth=items.filter(s=>(s.when||'').startsWith(`${p.year}-${p.month}`)).length;
+  const t=(k,v)=>`<div class="tile"><div class="v">${v}</div><div class="k">${k}</div></div>`;
+  $('#stat-big').innerHTML=t('Sightings',items.length)+t('Aircraft',regs.size)+t('Special',sp)+t('This month',thisMonth)+t('Photos',items.filter(s=>s.photo).length)+t('Airlines',new Set(items.map(s=>s.airline).filter(Boolean)).size);
+  const bel=items.filter(isBeluga);
+  const firstSp=items.filter(s=>s.special).sort((a,b)=>(b.when||'').localeCompare(a.when||''))[0];
+  $('#stat-fun').innerHTML=`<h2>Highlights</h2><div class="small" style="font-size:15px;line-height:1.6">🐳 Belugas spotted: <b style="color:var(--cyan)">${bel.length}</b>${bel.length?` (latest ${esc(bel.sort((a,b)=>(b.when||'').localeCompare(a.when||''))[0].when?.slice(0,10)||'')})`:' (one for the wish list!)'}<br>✨ Latest special livery: <b style="color:var(--violet)">${firstSp?esc((firstSp.reg||'')+' '+(firstSp.livery||firstSp.airline||'')):'none yet'}</b></div>`;
+  $('#bars-airline').innerHTML=bars(topN(items.map(s=>s.airline)),'Log some sightings to see your top airlines.');
+  $('#bars-type').innerHTML=bars(topN(items.map(s=>s.type)),'Log some sightings to see your top types.');
+  const months=[];for(let i=5;i>=0;i--){const d=new Date(Date.UTC(+p.year,+p.month-1-i,15));const key=d.toISOString().slice(0,7);months.push([new Intl.DateTimeFormat('en-GB',{month:'short',year:'2-digit',timeZone:'UTC'}).format(d),items.filter(s=>(s.when||'').startsWith(key)).length]);}
+  $('#bars-month').innerHTML=items.length?bars(months.map(([k,n])=>[k,n]).map(x=>x[1]?x:[x[0],0]),''):'<div class="small">Your last six months will show here.</div>';
+}
+
+/* ============ export / import ============ */
+const blobToDataURL=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b);});
+async function dataURLToBlob(u){return (await fetch(u)).blob();}
+async function saveFile(name,blob){
+  const file=new File([blob],name,{type:blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name});return;}catch(e){if(e.name==='AbortError')return;}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+}
+const stamp=()=>ukLocalInput(new Date()).replace(/[-:T]/g,'').slice(0,12);
+$('#exp-json').onclick=async()=>{if(!items.length)return toast('Nothing to export yet');
+  const out=[];for(const s of items)out.push({...s,photo:s.photo?await blobToDataURL(s.photo):null});
+  await saveFile(`egcc-spotter-log-${stamp()}.json`,new Blob([JSON.stringify({app:'EGCC Spotter',version:1,exported:new Date().toISOString(),sightings:out},null,1)],{type:'application/json'}));};
+const CSV_COLS=['id','reg','type','airline','special','livery','when','location','runway','notes'];
+const csvCell=v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+$('#exp-csv').onclick=async()=>{if(!items.length)return toast('Nothing to export yet');
+  const head=['id','registration','type','airline','special_livery','livery','date_time_uk','location','runway','notes'];
+  const rows=[head.join(',')].concat(items.map(s=>CSV_COLS.map(k=>csvCell(k==='special'?(s.special?'yes':'no'):k==='when'?(s.when||'').replace('T',' '):s[k])).join(',')));
+  await saveFile(`egcc-spotter-log-${stamp()}.csv`,new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv'}));};
+function parseCSV(t){const rows=[];let row=[],cell='',q=false;t=t.replace(/^\ufeff/,'');
+  for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=c;}
+    else if(c==='"')q=true;else if(c===','){row.push(cell);cell='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell='';}else cell+=c;}
+  if(cell||row.length){row.push(cell);rows.push(row);}return rows.filter(r=>r.some(x=>x.trim()));}
+$('#imp').onclick=()=>$('#imp-file').click();
+$('#imp-file').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;ev.target.value='';
+  try{const text=await f.text();let list=[];
+    if(/^\s*[\[{]/.test(text)){const j=JSON.parse(text);list=Array.isArray(j)?j:(j.sightings||[]);
+      for(const s of list){if(typeof s.photo==='string'&&s.photo.startsWith('data:'))s.photo=await dataURLToBlob(s.photo);else s.photo=null;}}
+    else{const rows=parseCSV(text);const h=rows.shift().map(x=>x.trim().toLowerCase());const ix=n=>h.indexOf(n);
+      const map={id:'id',reg:'registration',type:'type',airline:'airline',special:'special_livery',livery:'livery',when:'date_time_uk',location:'location',runway:'runway',notes:'notes'};
+      list=rows.map(r=>{const o={};for(const[k,col]of Object.entries(map)){const i=ix(col)>=0?ix(col):ix(k);o[k]=i>=0?(r[i]||'').trim():'';}
+        o.special=/^(yes|true|1|y)$/i.test(o.special);o.when=(o.when||'').replace(' ','T').slice(0,16);o.photo=null;return o;});}
+    let n=0;for(const s of list){if(!s||!(s.reg||s.type||s.airline))continue;s.id=s.id||('s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+      const ex=items.find(x=>x.id===s.id);if(ex&&!s.photo&&ex.photo)s.photo=ex.photo;s.reg=(s.reg||'').toUpperCase();s.createdAt=s.createdAt||new Date().toISOString();await DB.put(s);urls.delete(s.id);n++;}
+    await reload();toast(`Imported ${n} sighting${n===1?'':'s'}`);
+  }catch(e){toast('Import failed: '+e.message);}
+};
+
+/* ============ tabs & boot ============ */
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+b.dataset.tab));$('#fab').style.display=b.dataset.tab==='live'?'none':'';window.scrollTo(0,0);
+  if(location.hash!=='#'+b.dataset.tab)history.replaceState(null,'','#'+b.dataset.tab);});
+(async()=>{
+  try{await DB.open();await reload();}catch(e){$('#list').innerHTML=`<div class="banner err">Your log can't be stored on this device (${esc(e.message)}). If you're in Private Browsing, switch it off.</div>`;}
+  if(navigator.storage&&navigator.storage.persist){try{const ok=await navigator.storage.persist();$('#storage-note').textContent=ok?'This phone has agreed to keep your log safe from automatic clean-up.':'Tip: add this app to your Home Screen so iOS keeps your log safe, and export a backup now and then.';}catch(e){}}
+  const h=location.hash.slice(1);if(['log','stats'].includes(h))document.querySelector(`nav.tabs button[data-tab="${h}"]`).click();
+  refresh();
+  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
